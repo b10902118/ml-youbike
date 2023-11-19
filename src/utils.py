@@ -1,4 +1,4 @@
-from datetime import time, date
+from datetime import time, date, datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -85,7 +85,7 @@ def evaluation(y_true, y_pred, tots, time_range):
     plt.title("Mean Absolute Error Over Time")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig("error.png")
+    plt.savefig(f"error-{datetime.now().strftime('%m-%d-%H-%M')}.png")
 
     # error function defined in the problem description
     err = (

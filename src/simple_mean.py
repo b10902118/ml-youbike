@@ -9,10 +9,14 @@ from utils import *
 
 
 TRAIN_START = "2023-10-02 00:00"
-TRAIN_END = "2023-10-20 23:59"
+TRAIN_END = "2023-11-07 23:59:00"
+# TRAIN_END = "2023-10-20 23:59"
 
-TEST_START = "2023-10-25 00:00"
-TEST_END = "2023-10-28 23:59"
+TEST_START = "2023-11-08 00:00"
+TEST_END = "2023-11-14 23:59"
+# TEST_START = "2023-10-25 00:00"
+# TEST_END = "2023-10-28 23:59"
+
 
 PUBLIC_START = "2023-10-21 00:00"
 PUBLIC_END = "2023-10-24 23:59"
@@ -66,11 +70,7 @@ y_pred = means.loc[ftr].values
 local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
-"""
-MAE 4.949248624639249
-Score 0.4601133171423995
-"""
-exit()
+# exit()
 
 
 # does the same at public test set (2023/10/21 - 2023/10/24)
