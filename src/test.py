@@ -8,11 +8,17 @@ from sklearn.metrics import mean_absolute_error
 from utils import *
 
 
-TRAIN_START = "20231002"
-TRAIN_END = "20231020"
-TEST_START = "20231025"
-TEST_END = "20231028"
-# PRED_DATE_RANGES = [("20231021",20231024),("20231204",20231210)]
+TRAIN_START = "2023-10-02 00:00"
+TRAIN_END = "2023-10-20 23:59"
+
+TEST_START = "2023-10-25 00:00"
+TEST_END = "2023-10-28 23:59"
+
+PUBLIC_START = "2023-10-21 00:00"
+PUBLIC_END = "2023-10-24 23:59"
+
+PRIVATE_START = "2023-12-04 00:00"
+PRIVARE_END = "2023-12-10 23:59"
 
 with open("./cache/small_data_cache.pkl", "rb") as f:
     df = pickle.load(f)
@@ -31,9 +37,7 @@ ntu_tots = get_tot(df, ntu_snos)
 """
 
 
-holidays = [
-    d for d in pd.date_range(start=TRAIN_START, end=TEST_END).date if is_holiday(d)
-]
+holidays = [d for d in date_range(start=TRAIN_START, end=PRIVARE_END) if is_holiday(d)]
 
 tb = (
     pd.pivot_table(df, index="time", columns="sno", values="sbi")
@@ -59,13 +63,14 @@ ftr = list(
     np.stack([test.index.time, test.index.to_series().dt.date.apply(is_holiday)]).T
 )
 y_pred = means.loc[ftr].values
-evaluation(y_test, y_pred, ntu_tots)
+local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
+evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
 exit()
 
 
 # does the same at public test set (2023/10/21 - 2023/10/24)
-public_test_range = pd.date_range("2023/10/21 00:00", "2023/10/24 23:59", freq="20min")
+public_test_range = pd.date_range(PUBLIC_START, PUBLIC_END, freq="20min")
 # list makes indexer 1D, or it is an 2D indexer
 ftr = list(
     np.stack(
@@ -80,7 +85,7 @@ y_public_test = means.loc[ftr].values
 public_test_df = pd.DataFrame(y_public_test, columns=ntu_snos, index=public_test_range)
 
 # we haven't do this yet, but it is required for submission
-private_test_range = pd.date_range("2023/12/04 00:00", "2023/12/10 23:59", freq="20min")
+private_test_range = pd.date_range(PRIVATE_START, PRIVARE_END, freq="20min")
 private_test_df = pd.DataFrame(0, columns=ntu_snos, index=private_test_range)
 
 

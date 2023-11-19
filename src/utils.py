@@ -32,7 +32,12 @@ def is_holiday(date: date):
 
 
 def get_tot(df, snos):
-    result_df = df[df["sno"].isin(snos)].groupby("sno")["tot"].first().reset_index()
+    result_df = (
+        df[df["sno"].isin(snos)]
+        .groupby("sno", observed=True)["tot"]
+        .first()
+        .reset_index()
+    )
     result_df.set_index("sno", inplace=True)
     result_df.columns = ["tot"]
     s_arr = result_df.values.reshape(-1)
@@ -43,20 +48,44 @@ def date_range(start: str, end: str):
     return pd.date_range(start, end).date
 
 
-def evaluation(y_true, y_pred, tots):
+# def evaluation(y_true, y_pred, tots):
+#    print("MAE", mean_absolute_error(y_true, y_pred))
+#
+#    # yt is a row of many station's sbi
+#    errors = np.array([mean_absolute_error(yt, yp) for yt, yp in zip(y_true, y_pred)])
+#    # TODO make it time
+#    xs = np.arange(len(errors))
+#    plt.plot(xs, errors)
+#    plt.savefig("error.png")
+#
+#    # errors2 = np.abs(y_pred - y_true).reshape(-1)
+#    # counts, edges, bars = plt.hist(errors2, bins=len(set(errors2)))
+#    # plt.bar_label(bars)
+#    # plt.show()
+#
+#    # error function defined in the problem description
+#    err = (
+#        3
+#        * np.abs((y_pred - y_true) / tots)
+#        * (np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3))
+#    )
+#    print("Score", err.mean())
+
+
+def evaluation(y_true, y_pred, tots, time_range):
     print("MAE", mean_absolute_error(y_true, y_pred))
 
     # yt is a row of many station's sbi
     errors = np.array([mean_absolute_error(yt, yp) for yt, yp in zip(y_true, y_pred)])
-    # TODO make it time
-    xs = np.arange(len(errors))
-    plt.plot(xs, errors)
-    plt.savefig("error.png")
 
-    # errors2 = np.abs(y_pred - y_true).reshape(-1)
-    # counts, edges, bars = plt.hist(errors2, bins=len(set(errors2)))
-    # plt.bar_label(bars)
-    # plt.show()
+    # Plot errors against timestamps
+    plt.plot(time_range, errors)
+    plt.xlabel("Time")
+    plt.ylabel("MAE")
+    plt.title("Mean Absolute Error Over Time")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig("error.png")
 
     # error function defined in the problem description
     err = (
