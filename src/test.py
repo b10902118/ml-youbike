@@ -66,6 +66,10 @@ y_pred = means.loc[ftr].values
 local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
+"""
+MAE 4.949248624639249
+Score 0.4601133171423995
+"""
 exit()
 
 
