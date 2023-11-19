@@ -45,38 +45,33 @@ def load_data_file(path: Path, base_date=BASE_DATE):
                 v.pop("bemp")
             ar.append(v)
     # fill NaN with next value and then previous value (for last empty)
-    df = pd.DataFrame(ar).bfill().ffill()
-    to_category = ["sno", "act"]
-    df[to_category] = df[to_category].astype("category")
-    to_int8 = ['tot','sbi']
-    df[to_int8] = df[to_int8].astype('int8')
-    # print(df.dtypes)
-    # exit()
-    return df
+    return pd.DataFrame(ar).bfill().ffill()
 
 
+# 1. conform column "time" with timestamp
+# 2. drop "bemp" (bemp = tot - sbi)
+# 3. use compact dtype category and int8 (current cache size: 120MB)
 """
+                    time        sno  tot  sbi act
+0    2023-10-02 00:00:00  500101001   28   12   1
+1    2023-10-02 00:01:00  500101001   28   12   1
+2    2023-10-02 00:02:00  500101001   28   13   1
+3    2023-10-02 00:03:00  500101001   28   13   1
+4    2023-10-02 00:04:00  500101001   28   13   1
+...                  ...        ...  ...  ...  ..
+1435 2023-11-16 23:55:00  500119091   18    1   1
+1436 2023-11-16 23:56:00  500119091   18    1   1
+1437 2023-11-16 23:57:00  500119091   18    1   1
+1438 2023-11-16 23:58:00  500119091   18    1   1
+1439 2023-11-16 23:59:00  500119091   18    1   1
+
+[6289920 rows x 5 columns]
 time    datetime64[ns]
 sno           category
-tot            float64
-sbi            float64
+tot               int8
+sbi               int8
 act           category
 dtype: object
-"""
-
-"""
-                    time        sno   tot   sbi act
-0    2023-10-02 00:00:00  500101001  28.0  12.0   1
-1    2023-10-02 00:01:00  500101001  28.0  12.0   1
-2    2023-10-02 00:02:00  500101001  28.0  13.0   1
-3    2023-10-02 00:03:00  500101001  28.0  13.0   1
-4    2023-10-02 00:04:00  500101001  28.0  13.0   1
-...                  ...        ...   ...   ...  ..
-1435 2023-11-16 23:55:00  500119091  18.0   1.0   1
-1436 2023-11-16 23:56:00  500119091  18.0   1.0   1
-1437 2023-11-16 23:57:00  500119091  18.0   1.0   1
-1438 2023-11-16 23:58:00  500119091  18.0   1.0   1
-1439 2023-11-16 23:59:00  500119091  18.0   1.0   1
 """
 
 
@@ -102,13 +97,20 @@ def load_all_data(demographics, cache_path=Path("./cache/small_data_cache.pkl"))
             df = pd.concat(dfs)
             df_over_dates.append(df)
     df = pd.concat(df_over_dates)
-    print(df)
+    # compact data
+    to_category = ["sno", "act"]
+    df[to_category] = df[to_category].astype("category")
+    to_int8 = ["tot", "sbi"]
+    df[to_int8] = df[to_int8].astype("int8")
+
     df.to_pickle(cache_path)
-    assert df.groupby(by="sno")["time"].is_monotonic_increasing.all()
+    assert df.groupby(by="sno", observed=True)["time"].is_monotonic_increasing.all()
     N_STATIONS = df["sno"].nunique()
     assert N_STATIONS == 112, "ntu station number not matched"
+    print(df)
+    print(df.dtypes)
     print("small cache created")
-    #return df
+    # return df
 
 
 print(f"CPU_CNT = {CPU_CNT}")
