@@ -1,0 +1,12 @@
+name: ml
+channels:
+  - defaults
+dependencies:
+  - pandas
+  - scikit-learn
+  - numpy
+  - matplotlib
+  - xgboost
+  - tqdm
+  - joblib
+
