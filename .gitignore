@@ -1,0 +1,10 @@
+./src/__pycache__/
+./src/*.py~
+./src/cache/
+./src/old/
+./src/*.png
+
+./submission/
+./line/
+./weather.data/
+
