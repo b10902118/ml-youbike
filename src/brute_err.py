@@ -10,8 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 TRAIN_START = "2023-10-02 00:00"
-TRAIN_END = "2023-11-07 23:59:00"
-# TRAIN_END = "2023-10-20 23:59"
+# TRAIN_END = "2023-11-07 23:59:00"
+TRAIN_END = "2023-10-20 23:59"
 
 TEST_START = "2023-11-08 00:00"
 TEST_END = "2023-11-14 23:59"
