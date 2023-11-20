@@ -121,6 +121,7 @@ for sno, tot in zip(ntu_snos, ntu_tots):
                     psd.index.get_level_values("holiday") == holiday, t
                 ].values,
                 tot=tot,
+                step=0.1,
             )  # majority of sbi are int
             Ein += err
             # print(f"{t} sbi:{sbi}   err: {err}")
