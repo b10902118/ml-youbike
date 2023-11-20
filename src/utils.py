@@ -5,6 +5,15 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
 
 
+def print_time_ranges(TRAIN_START: str, TRAIN_END: str, TEST_START: str, TEST_END: str):
+    print(
+        f"Train: {pd.to_datetime(TRAIN_START).strftime('%m/%d')} - {pd.to_datetime(TRAIN_END).strftime('%m/%d')}"
+    )
+    print(
+        f"Test: {pd.to_datetime(TEST_START).strftime('%m/%d')} - {pd.to_datetime(TEST_END).strftime('%m/%d')}"
+    )
+
+
 def plot_line(dataframe, snos, name_prefix=""):
     for sno in snos:
         station_data = dataframe[dataframe["sno"] == sno]
@@ -70,6 +79,9 @@ def date_range(start: str, end: str):
 #        * (np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3))
 #    )
 #    print("Score", err.mean())
+
+
+# should make tot an array,which may change though time, sbi from 0 to tot.max
 
 
 def evaluation(y_true, y_pred, tots, time_range):
