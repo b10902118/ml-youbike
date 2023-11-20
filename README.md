@@ -1,6 +1,13 @@
 # Results
 ## brute err (group by sno,time,holiday)
 ```
+Train: 10/02 - 11/19
+Test: 11/08 - 11/14
+    Ein = 0.31449796693431414
+    MAE 4.1863307823129245
+    Score 0.2776735544033527
+    Kaggle: 0.28772
+
 Train: 10/02 - 10/20
 Test: 11/08 - 11/14
     Ein = 0.31625753705296
