@@ -1,4 +1,13 @@
 # Results
+## 7days
+```
+Train: 10/02 - 11/19
+Test: 11/08 - 11/14
+Ein = 0.2610810510255989
+MAE 3.644026360544218
+Score 0.2298803781481282
+Kaggle: 0.29165
+```
 ## brute err (group by sno,time,holiday)
 ```
 Train: 10/02 - 11/19
