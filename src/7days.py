@@ -5,8 +5,7 @@ import pickle
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
 from utils import *
-from concurrent.futures import ThreadPoolExecutor
-
+from median_optimization import *
 
 TRAIN_START = "2023-10-02 00:00"
 # TRAIN_END = "2023-11-07 23:59:00"
@@ -42,7 +41,7 @@ ntu_tots = get_tot(df, ntu_snos)
 """
 
 
-holidays = [d for d in date_range(start=TRAIN_START, end=PRIVARE_END) if is_holiday(d)]
+# holidays = [d for d in date_range(start=TRAIN_START, end=PRIVARE_END) if is_holiday(d)]
 
 tb = (
     pd.pivot_table(df, index="time", columns="sno", values="sbi")
@@ -52,63 +51,11 @@ tb = (
 # [] only provides view,so assigning to it cause warning
 train = tb[tb.index.to_series().dt.date.isin(date_range(TRAIN_START, TRAIN_END))].copy()
 train.reset_index(names="time", inplace=True)
-train["holiday"] = train["time"].dt.date.apply(is_holiday)
-train.set_index(["time", "holiday"], inplace=True)
+train["weekday"] = train["time"].dt.weekday
+train.set_index(["time", "weekday"], inplace=True)
 
 test = tb[tb.index.to_series().dt.date.isin(date_range(TEST_START, TEST_END))]
 y_test = test.values
-
-
-def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
-    return 3 * np.dot(
-        np.abs((y_pred - y_true) / tots),
-        np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3),
-    )
-
-
-def first_greater_prefix_sum_idx(arr, target):
-    prefix_sum = 0
-
-    for i, element in enumerate(arr):
-        prefix_sum += element
-
-        if prefix_sum > target:
-            return i
-
-
-# can utilize numpy vectorize operation
-def brute(
-    y_true: np.ndarray, tot: int, step: np.float64 = 1
-) -> (np.float64, np.float64):
-    arr_len = y_true.shape[0]
-    tots = np.full(arr_len, tot)
-
-    best_sbi = 0.0
-    best_err = 9999999999.0  # biggest
-
-    # generalized median
-    y_sorted = np.sort(y_true)
-    weight = np.abs(y_sorted / tot - 1 / 3) + np.abs(y_sorted / tot - 2 / 3)
-    w_mid = np.sum(weight) / 2
-    w_cur = 0
-
-    best_sbi = y_sorted[first_greater_prefix_sum_idx(weight, w_mid)]
-    best_err = error(y_true, np.full(arr_len, best_sbi), tots)
-
-    return best_sbi, best_err / arr_len
-
-    # tested with the following
-    # for sbi in np.arange(0, tot, step):
-    #    sbis = np.full(arr_len, sbi)
-    #    err = error(y_true, sbis, tots)
-    #    if err < best_err:
-    #        # if best_err - err > 0.00000001:
-    #        # print("predict not optimal")
-    #        # print(f"{best_sbi}: {best_err}")
-    #        # print(f"{sbi}: {err}")
-    #        best_sbi, best_err = sbi, err
-
-    # return (best_sbi, best_err / arr_len)
 
 
 # final format:
@@ -121,37 +68,35 @@ time  sbi
 result_df = pd.DataFrame(
     columns=ntu_snos,
     index=pd.MultiIndex.from_product(
-        [pd.date_range("00:00", "23:59", freq="20min").time, [True, False]],
-        names=("time", "holiday"),
+        [pd.date_range("00:00", "23:59", freq="20min").time, range(7)],
+        names=("time", "weekday"),
     ),
     dtype=np.float64,
 )
 
 Ein = 0.0
 for sno, tot in zip(ntu_snos, ntu_tots):
+    # sd = station data
     sd = train[sno].to_frame()
     sd.rename(columns={sno: "sbi"}, inplace=True)
-    sd.reset_index(["time", "holiday"], inplace=True)
+    sd.reset_index(["time", "weekday"], inplace=True)
     sd["date"] = sd["time"].dt.date
     sd["time"] = sd["time"].dt.time
     # print(sd)
     # exit()
-    psd = pd.pivot_table(sd, index=["date", "holiday"], columns="time", values="sbi")
+    psd = pd.pivot_table(sd, index=["date", "weekday"], columns="time", values="sbi")
     # sno col have its sbi
     # print(psd)
-    for holiday in [False, True]:
+    for day in range(7):  # 0 to 6
         for t in psd.columns:
             # print(t, sno)
-            sbi, err = brute(
-                y_true=psd.loc[
-                    psd.index.get_level_values("holiday") == holiday, t
-                ].values,
+            sbi, err = optimal_median(
+                y_true=psd.loc[psd.index.get_level_values("weekday") == day, t].values,
                 tot=tot,
-                step=0.1,
-            )  # majority of sbi are int
+            )
             Ein += err
             # print(f"{t} sbi:{sbi}   err: {err}")
-            result_df.at[(t, holiday), sno] = sbi
+            result_df.at[(t, day), sno] = sbi
             # result_df.at[[t, isholiday], sno] = np.float64(sbi)
             # print(result_df.at[t, sno])
 
@@ -161,9 +106,10 @@ Ein /= result_df.size
 print_time_ranges(TRAIN_START, TRAIN_END, TEST_START, TEST_END)
 print(f"Ein = {Ein}")
 
-ftr = list(
-    np.stack([test.index.time, test.index.to_series().dt.date.apply(is_holiday)]).T
-)
+# exit()
+
+# self evaluation
+ftr = list(np.stack([test.index.time, test.index.to_series().dt.weekday]).T)
 y_pred = result_df.loc[ftr].values
 local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
@@ -174,21 +120,20 @@ evaluation(y_test, y_pred, ntu_tots, local_test_range)
 # does the same at public test set (2023/10/21 - 2023/10/24)
 public_test_range = pd.date_range(PUBLIC_START, PUBLIC_END, freq="20min")
 # list makes indexer 1D, or it is an 2D indexer
-ftr = list(
-    np.stack(
-        [public_test_range.time, np.vectorize(is_holiday)(public_test_range.date)]
-    ).T
-)
+ftr = list(np.stack([public_test_range.time, public_test_range.weekday]).T)
 # print(ftr)
 # ftr = list(ftr)
 # print(ftr)
-
 y_public_test = result_df.loc[ftr].values
 public_test_df = pd.DataFrame(y_public_test, columns=ntu_snos, index=public_test_range)
 
 # we haven't do this yet, but it is required for submission
 private_test_range = pd.date_range(PRIVATE_START, PRIVARE_END, freq="20min")
-private_test_df = pd.DataFrame(0, columns=ntu_snos, index=private_test_range)
+ftr = list(np.stack([private_test_range.time, private_test_range.weekday]).T)
+y_private_test = result_df.loc[ftr].values
+private_test_df = pd.DataFrame(
+    y_private_test, columns=ntu_snos, index=private_test_range
+)
 
 
 # convert the prediction to the required format
@@ -218,6 +163,6 @@ out_df = pd.DataFrame(
     }
 )
 out_df.to_csv(
-    f"../submission/pub_{datetime.now().strftime('%m-%d-%H-%M')}.csv", index=False
+    f"../submission/pub_pri_{datetime.now().strftime('%m-%d-%H-%M')}.csv", index=False
 )
 print("csv created")

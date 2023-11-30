@@ -1,3 +1,6 @@
+import numpy as np
+
+
 def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
     return 3 * np.dot(
         np.abs((y_pred - y_true) / tots),
@@ -16,9 +19,7 @@ def first_greater_prefix_sum_idx(arr, target):
 
 
 # can utilize numpy vectorize operation
-def brute(
-    y_true: np.ndarray, tot: int, step: np.float64 = 1
-) -> (np.float64, np.float64):
+def optimal_median(y_true: np.ndarray, tot: int) -> (np.float64, np.float64):
     arr_len = y_true.shape[0]
     tots = np.full(arr_len, tot)
 
@@ -31,6 +32,8 @@ def brute(
     w_mid = np.sum(weight) / 2
     w_cur = 0
 
+    # if odd, first > w_mid
+    # if even, before m1 must less than w_mid, m2 must greater than w_mid
     best_sbi = y_sorted[first_greater_prefix_sum_idx(weight, w_mid)]
     best_err = error(y_true, np.full(arr_len, best_sbi), tots)
 
