@@ -45,7 +45,7 @@ def load_data_file(path: Path, base_date=BASE_DATE):
                 v.pop("bemp")
             ar.append(v)
     # fill NaN with next value and then previous value (for last empty)
-    return pd.DataFrame(ar).bfill().ffill()
+    return pd.DataFrame(ar).bfill(limit=5).ffill(limit=5)  # TODO do after concat
 
 
 # 1. conform column "time" with timestamp
@@ -96,7 +96,9 @@ def load_all_data(demographics, cache_path=Path("./cache/small_data_cache.pkl"))
             # dfs = [result for result in results]
             df = pd.concat(dfs)
             df_over_dates.append(df)
+
     df = pd.concat(df_over_dates)
+    df.dropna(inplace=True)
     # compact data
     to_category = ["sno", "act"]
     df[to_category] = df[to_category].astype("category")

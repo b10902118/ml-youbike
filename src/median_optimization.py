@@ -22,6 +22,9 @@ def first_greater_prefix_sum_idx(arr, target):
 
 # can utilize numpy vectorize operation
 def optimal_median(y_true: np.ndarray, tot: int) -> (np.float64, np.float64):
+    if len(y_true.shape) >= 2:
+        print("shape error")
+        exit()
     arr_len = y_true.shape[0]
     tots = np.full(arr_len, tot)
 

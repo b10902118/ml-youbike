@@ -10,7 +10,7 @@ from median_optimization import optimal_median
 TRAIN_START = "2023-10-02 00:00"
 # TRAIN_END = "2023-11-07 23:59:00"
 # TRAIN_END = "2023-10-20 23:59"
-TRAIN_END = "2023-11-19 23:59"
+TRAIN_END = "2023-11-30 23:59"
 
 # TEST_START = "2023-11-08 00:00"
 # TEST_END = "2023-11-14 23:59"
@@ -41,7 +41,7 @@ ntu_tots = get_tot(df, ntu_snos)
 """
 
 
-# holidays = [d for d in date_range(start=TRAIN_START, end=PRIVARE_END) if is_holiday(d)]
+holidays = [d for d in date_range(start=TRAIN_START, end=PRIVARE_END) if is_holiday(d)]
 
 tb = (
     pd.pivot_table(df, index="time", columns="sno", values="sbi")
@@ -119,7 +119,7 @@ local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
 # exit()
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
-exit()
+# exit()
 
 
 # does the same at public test set (2023/10/21 - 2023/10/24)

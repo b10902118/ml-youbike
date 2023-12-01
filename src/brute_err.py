@@ -5,13 +5,12 @@ import pickle
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
 from utils import *
-from concurrent.futures import ThreadPoolExecutor
-
+from median_optimization import optimal_median
 
 TRAIN_START = "2023-10-02 00:00"
 # TRAIN_END = "2023-11-07 23:59:00"
 # TRAIN_END = "2023-10-20 23:59"
-TRAIN_END = "2023-11-19 23:59"
+TRAIN_END = "2023-11-30 23:59"
 
 TEST_START = "2023-11-08 00:00"
 TEST_END = "2023-11-14 23:59"
@@ -59,32 +58,6 @@ test = tb[tb.index.to_series().dt.date.isin(date_range(TEST_START, TEST_END))]
 y_test = test.values
 
 
-def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
-    return 3 * np.dot(
-        np.abs((y_pred - y_true) / tots),
-        np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3),
-    )
-
-
-# can utilize numpy vectorize operation
-def brute(
-    y_true: np.ndarray, tot: int, step: np.float64 = 1
-) -> (np.float64, np.float64):
-    arr_len = y_true.shape[0]
-    tots = np.full(arr_len, tot)
-
-    best_sbi = 0.0
-    best_err = 9999999999.0  # biggest
-
-    for sbi in np.arange(0, tot, step):
-        sbis = np.full(arr_len, sbi)
-        err = error(y_true, sbis, tots)
-        if err < best_err:
-            best_sbi, best_err = sbi, err
-
-    return (best_sbi, best_err / arr_len)
-
-
 # final format:
 """
         sno 500101001 500101002
@@ -116,12 +89,11 @@ for sno, tot in zip(ntu_snos, ntu_tots):
     for holiday in [False, True]:
         for t in psd.columns:
             # print(t, sno)
-            sbi, err = brute(
+            sbi, err = optimal_median(
                 y_true=psd.loc[
                     psd.index.get_level_values("holiday") == holiday, t
                 ].values,
                 tot=tot,
-                step=0.1,
             )  # majority of sbi are int
             Ein += err
             # print(f"{t} sbi:{sbi}   err: {err}")

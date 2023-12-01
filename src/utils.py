@@ -28,9 +28,14 @@ def plot_line(dataframe, snos, name_prefix=""):
         plt.savefig(f"./line/{name_prefix}-{sno}.png")
 
 
-def is_holiday(date: date):
-    long_holiday = pd.date_range(start="2023-10-07", end="2023-10-10").date
+long_holiday = (
+    pd.date_range(start="2023-10-07", end="2023-10-10")
+    .union(pd.date_range(start="2023-11-15", end="2023-11-15"))
+    .union(pd.date_range(start="2023-11-24", end="2023-11-24"))
+).date
 
+
+def is_holiday(date: date):
     if date in long_holiday:
         return True
     # Check if the given date is a Saturday or Sunday
