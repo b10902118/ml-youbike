@@ -1,11 +1,13 @@
 import numpy as np
+from utils import error
 
 
-def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
-    return 3 * np.dot(
-        np.abs((y_pred - y_true) / tots),
-        np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3),
-    )
+# def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
+#    return (
+#        3
+#        * np.abs((y_pred - y_true) / tots)
+#        * (np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3))
+#    ).mean()
 
 
 def first_greater_prefix_sum_idx(arr, target):
@@ -37,7 +39,7 @@ def optimal_median(y_true: np.ndarray, tot: int) -> (np.float64, np.float64):
     best_sbi = y_sorted[first_greater_prefix_sum_idx(weight, w_mid)]
     best_err = error(y_true, np.full(arr_len, best_sbi), tots)
 
-    return best_sbi, best_err / arr_len
+    return best_sbi, best_err
 
     # tested with the following
     # for sbi in np.arange(0, tot, step):

@@ -5,7 +5,7 @@ import pickle
 import matplotlib.pyplot as plt
 from sklearn.metrics import mean_absolute_error
 from utils import *
-from median_optimization import *
+from median_optimization import optimal_median
 
 TRAIN_START = "2023-10-02 00:00"
 # TRAIN_END = "2023-11-07 23:59:00"
@@ -55,6 +55,7 @@ train["weekday"] = train["time"].dt.weekday
 train.set_index(["time", "weekday"], inplace=True)
 
 test = tb[tb.index.to_series().dt.date.isin(date_range(TEST_START, TEST_END))]
+# print(test)
 y_test = test.values
 
 
@@ -112,9 +113,13 @@ print(f"Ein = {Ein}")
 ftr = list(np.stack([test.index.time, test.index.to_series().dt.weekday]).T)
 y_pred = result_df.loc[ftr].values
 local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
+
+# print(y_test)
+# print(y_pred)
+# exit()
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
-# exit()
+exit()
 
 
 # does the same at public test set (2023/10/21 - 2023/10/24)

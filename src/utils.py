@@ -84,25 +84,39 @@ def date_range(start: str, end: str):
 # should make tot an array,which may change though time, sbi from 0 to tot.max
 
 
-def evaluation(y_true, y_pred, tots, time_range):
-    print("MAE", mean_absolute_error(y_true, y_pred))
-
-    # yt is a row of many station's sbi
-    errors = np.array([mean_absolute_error(yt, yp) for yt, yp in zip(y_true, y_pred)])
-
-    # Plot errors against timestamps
-    plt.plot(time_range, errors)
-    plt.xlabel("Time")
-    plt.ylabel("MAE")
-    plt.title("Mean Absolute Error Over Time")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(f"error-{datetime.now().strftime('%m-%d-%H-%M')}.png")
-
-    # error function defined in the problem description
-    err = (
+def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float64:
+    return (
         3
         * np.abs((y_pred - y_true) / tots)
         * (np.abs(y_true / tots - 1 / 3) + np.abs(y_true / tots - 2 / 3))
+    ).mean()
+
+
+def evaluation(y_true, y_pred, tots, time_range):
+    print("MAE: ", mean_absolute_error(y_true / tots, y_pred / tots))
+
+    # yt is a row of many station's sbi at a time
+    MAEs = np.array(
+        [mean_absolute_error(yt, yp) for yt, yp in zip(y_true / tots, y_pred / tots)]
     )
-    print("Score", err.mean())
+
+    # Plot errors against timestamps
+    plt.plot(time_range, MAEs, color="magenta")
+
+    # error function defined in the problem description
+    # tots is 1d array, but still fine for matrix /
+    print("Score: ", error(y_true, y_pred, tots))
+
+    # yt is a row of many station's sbi
+    scores = np.array([error(yt, yp, tots) for yt, yp in zip(y_true, y_pred)])
+
+    # plot score error
+    plt.plot(time_range, scores, color="blue")
+
+    # set up figure and save
+    plt.xlabel("Time")
+    plt.ylabel("Error")
+    plt.title("Score(blue) & MAE(magenta)")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.savefig(f"error-{datetime.now().strftime('%m-%d-%H-%M')}.png")
