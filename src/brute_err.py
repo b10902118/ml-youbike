@@ -47,6 +47,7 @@ tb = (
     pd.pivot_table(df, index="time", columns="sno", values="sbi")
     .resample("20min")
     .agg("first")
+    # .dropna(inplace=True) # currently handled at median_optimization
 )
 # [] only provides view,so assigning to it cause warning
 train = tb[tb.index.to_series().dt.date.isin(date_range(TRAIN_START, TRAIN_END))].copy()

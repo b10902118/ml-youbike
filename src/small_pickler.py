@@ -98,6 +98,7 @@ def load_all_data(demographics, cache_path=Path("./cache/small_data_cache.pkl"))
             df_over_dates.append(df)
 
     df = pd.concat(df_over_dates)
+    # resample can cause nan again
     df.dropna(inplace=True)
     # compact data
     to_category = ["sno", "act"]
