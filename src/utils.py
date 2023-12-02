@@ -14,18 +14,36 @@ def print_time_ranges(TRAIN_START: str, TRAIN_END: str, TEST_START: str, TEST_EN
     )
 
 
-def plot_line(dataframe, snos, name_prefix=""):
+# require date time
+def plot_line(df, snos, name_suffix="", pred=None):
     for sno in snos:
-        station_data = dataframe[dataframe["sno"] == sno]
+        station_data = df[df["sno"] == sno]
         table = pd.pivot_table(station_data, values="sbi", index="time", columns="date")
         # dfp = df.pivot(index="time", columns="date", values="sbi").bfill()
-        ax = table.plot(figsize=(12, 3), color="blue", legend=False)
+        ax = table.plot(figsize=(14, 4), color="blue", legend=False)
         mean = table.mean(axis=1)
         ax = mean.plot(ax=ax, color="red", lw=2, legend=False)
         std = table.std(axis=1)
-        ax = std.plot(ax=ax, color="orange", legend=False)
+        ax = std.plot(ax=ax, color="yellow", legend=False)
         # table.resample("10T").plot(figsize=(12, 3), legend=False)
-        plt.savefig(f"./line/{name_prefix}-{sno}.png")
+        plt.savefig(f"./lines/{sno}-{name_suffix}.png")
+        plt.close(ax.get_figure())
+
+
+def plot_all(df, result1, result2, ntu_snos, holidays):
+    print("plotting all")
+
+    df["datetime"] = df["time"]
+    df["date"] = df["datetime"].dt.date
+    df["time"] = df["datetime"].dt.time
+    for d in range(7):
+        day_df = df[df["datetime"].dt.weekday == d]
+        plot_line(day_df, ntu_snos, str(d))
+
+    holiday_df = df[df["date"].isin(holidays)]
+    plot_line(holiday_df, ntu_snos, "holiday")
+    weekday_df = df[~df["date"].isin(holidays)]
+    plot_line(weekday_df, ntu_snos, "weekday")
 
 
 long_holiday = (
