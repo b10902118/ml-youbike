@@ -115,7 +115,7 @@ def error(y_true: np.ndarray, y_pred: np.ndarray, tots: np.ndarray) -> np.float6
     ).mean()
 
 
-def evaluation(y_true, y_pred, tots, time_range):
+def evaluation(y_true, y_pred, tots, time_range, prefix=""):
     print("MAE: ", mean_absolute_error(y_true / tots, y_pred / tots))
 
     # yt is a row of many station's sbi at a time
@@ -142,4 +142,6 @@ def evaluation(y_true, y_pred, tots, time_range):
     plt.title("Score(blue) & MAE(magenta)")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(f"error-{datetime.now().strftime('%m-%d-%H-%M')}.png")
+    plt.savefig(
+        f"{prefix if prefix != '' else 'error'}-{datetime.now().strftime('%m-%d-%H-%M')}.png"
+    )
