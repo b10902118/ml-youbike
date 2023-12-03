@@ -8,14 +8,10 @@ from utils import *
 from median_optimization import optimal_median
 
 TRAIN_START = "2023-10-02 00:00"
-# TRAIN_END = "2023-11-07 23:59:00"
-# TRAIN_END = "2023-10-20 23:59"
-TRAIN_END = "2023-11-30 23:59"
+TRAIN_END = "2023-11-10 23:59"
 
-# TEST_START = "2023-11-08 00:00"
-# TEST_END = "2023-11-14 23:59"
-TEST_START = "2023-10-25 00:00"
-TEST_END = "2023-10-31 23:59"
+TEST_START = "2023-11-11 00:00"
+TEST_END = "2023-11-12 23:59"
 
 
 PUBLIC_START = "2023-10-21 00:00"
@@ -48,6 +44,8 @@ tb = (
     .resample("20min")
     .agg("first")
 )
+# exclude long holidays
+tb = tb[~tb.index.to_series().dt.date.isin(holidays)]
 # [] only provides view,so assigning to it cause warning
 train = tb[tb.index.to_series().dt.date.isin(date_range(TRAIN_START, TRAIN_END))].copy()
 train.reset_index(names="time", inplace=True)

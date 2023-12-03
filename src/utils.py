@@ -57,8 +57,8 @@ def is_holiday(date: date):
     if date in long_holiday:
         return True
     # Check if the given date is a Saturday or Sunday
-    if date.weekday() in [5, 6]:
-        return True
+    # if date.weekday() in [5, 6]:
+    #    return True
 
     return False
 
