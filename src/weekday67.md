@@ -36,19 +36,6 @@ csv created
 ```
 (ml) b10902118@ws3 [/tmp2/b10902118/ml/src] python weekday67.py && python brute_err.py
 Train: 10/02 - 11/17
-Test: 11/25 - 11/26
-Ein = 0.16986169053862643
-MAE:  0.19727493763703713
-Score:  0.34538277371445475
-csv created
-Train: 10/02 - 11/17
-Test: 11/25 - 11/26
-Ein = 0.30675282335088827
-MAE:  0.21941923857495807
-Score:  0.3871333654117943
-csv created
-(ml) b10902118@ws3 [/tmp2/b10902118/ml/src] python weekday67.py && python brute_err.py
-Train: 10/02 - 11/17
 Test: 11/18 - 11/19
 Ein = 0.16986169053862643
 MAE:  0.246704993716744
@@ -56,9 +43,9 @@ Score:  0.42883633585492376
 csv created
 Train: 10/02 - 11/17
 Test: 11/18 - 11/19
-Ein = 0.30675282335088827
-MAE:  0.28367773521610623
-Score:  0.5036562947343913
+Ein = 0.3082243211012479
+MAE:  0.22469335099910845
+Score:  0.3939141105378621
 csv created
 (ml) b10902118@ws3 [/tmp2/b10902118/ml/src] python weekday67.py && python brute_err.py
 Train: 10/02 - 11/10
@@ -67,10 +54,11 @@ Ein = 0.12622939555258741
 MAE:  0.27441327363716483
 Score:  0.44322130862601294
 csv created
+
 Train: 10/02 - 11/10
 Test: 11/11 - 11/12
-Ein = 0.26703307814736704
-MAE:  0.2829760429680928
-Score:  0.4747790217303406
-csv created
+Ein = 0.294447842767368
+MAE:  0.2356331920108172
+Score:  0.39001512693147267
 ```
+

@@ -8,10 +8,10 @@ from utils import *
 from median_optimization import optimal_median
 
 TRAIN_START = "2023-10-02 00:00"
-TRAIN_END = "2023-11-17 23:59"
+TRAIN_END = "2023-11-10 23:59"
 
-TEST_START = "2023-11-18 00:00"
-TEST_END = "2023-11-19 23:59"
+TEST_START = "2023-11-11 00:00"
+TEST_END = "2023-11-12 23:59"
 
 
 PUBLIC_START = "2023-10-21 00:00"
@@ -29,7 +29,7 @@ with open("../html.2023.final.data/sno_test_set.txt") as f:
 ntu_tots = get_tot(df, ntu_snos)
 # the data looks like this:
 """
-        time               sno      tot   sbi   bemp  act
+     datetime               sno      tot   sbi   bemp  act
 0    2023-10-02 00:00:00  500101001  28.0  12.0  16.0   1
 1    2023-10-02 00:01:00  500101001  28.0  12.0  16.0   1
 2    2023-10-02 00:02:00  500101001  28.0  13.0  15.0   1
@@ -43,15 +43,17 @@ tb = (
     pd.pivot_table(df, index="time", columns="sno", values="sbi")
     .resample("20min")
     .agg("first")
-    # .dropna(inplace=True) # currently handled at median_optimization
 )
+# exclude long holidays
+tb = tb[~tb.index.to_series().dt.date.isin(holidays)]
 # [] only provides view,so assigning to it cause warning
 train = tb[tb.index.to_series().dt.date.isin(date_range(TRAIN_START, TRAIN_END))].copy()
 train.reset_index(names="time", inplace=True)
-train["holiday"] = train["time"].dt.date.apply(is_holiday)
-train.set_index(["time", "holiday"], inplace=True)
+train["weekday"] = train["time"].dt.weekday
+train.set_index(["time", "weekday"], inplace=True)
 
 test = tb[tb.index.to_series().dt.date.isin(date_range(TEST_START, TEST_END))]
+# print(test)
 y_test = test.values
 
 
@@ -65,36 +67,49 @@ time  sbi
 result_df = pd.DataFrame(
     columns=ntu_snos,
     index=pd.MultiIndex.from_product(
-        [pd.date_range("00:00", "23:59", freq="20min").time, [True, False]],
-        names=("time", "holiday"),
+        [pd.date_range("00:00", "23:59", freq="20min").time, [0, 6, 7]],
+        names=("time", "weekday"),
     ),
     dtype=np.float64,
 )
 
 Ein = 0.0
 for sno, tot in zip(ntu_snos, ntu_tots):
+    # sd = station data
     sd = train[sno].to_frame()
     sd.rename(columns={sno: "sbi"}, inplace=True)
-    sd.reset_index(["time", "holiday"], inplace=True)
+    sd.reset_index(["time", "weekday"], inplace=True)
     sd["date"] = sd["time"].dt.date
     sd["time"] = sd["time"].dt.time
     # print(sd)
     # exit()
-    psd = pd.pivot_table(sd, index=["date", "holiday"], columns="time", values="sbi")
+    psd = pd.pivot_table(sd, index=["date", "weekday"], columns="time", values="sbi")
     # sno col have its sbi
     # print(psd)
-    for holiday in [False, True]:
+    for day in [0, 5, 6]:  # 0 to 6
         for t in psd.columns:
             # print(t, sno)
-            sbi, err = optimal_median(
-                y_true=psd.loc[
-                    psd.index.get_level_values("holiday") == holiday, t
-                ].values,
-                tot=tot,
-            )  # majority of sbi are int
+            sbi, err = 0, 0
+            # print(
+            #    psd.loc[psd.index.get_level_values("weekday").isin(range(5)), t].values
+            # )
+            if day == 0:  # weekday
+                sbi, err = optimal_median(
+                    y_true=psd.loc[
+                        psd.index.get_level_values("weekday").isin(range(5)), t
+                    ].values,
+                    tot=tot,
+                )
+            else:
+                sbi, err = optimal_median(
+                    y_true=psd.loc[
+                        psd.index.get_level_values("weekday") == day, t
+                    ].values,
+                    tot=tot,
+                )
             Ein += err
             # print(f"{t} sbi:{sbi}   err: {err}")
-            result_df.at[(t, holiday), sno] = sbi
+            result_df.at[(t, day), sno] = sbi
             # result_df.at[[t, isholiday], sno] = np.float64(sbi)
             # print(result_df.at[t, sno])
 
@@ -104,28 +119,56 @@ Ein /= result_df.size
 print_time_ranges(TRAIN_START, TRAIN_END, TEST_START, TEST_END)
 print(f"Ein = {Ein}")
 
+# exit()
+
+
+def trans(s):
+    if s in range(5):
+        return 0
+    return s
+
+
+# self evaluation
 ftr = list(
-    np.stack([test.index.time, test.index.to_series().dt.date.apply(is_holiday)]).T
+    np.stack([test.index.time, test.index.to_series().dt.weekday.apply(trans)]).T
 )
 y_pred = result_df.loc[ftr].values
 local_test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
+
+# print(y_test)
+# print(y_pred)
+# exit()
 evaluation(y_test, y_pred, ntu_tots, local_test_range)
 
 # exit()
 
+# TODO plot all pred
+for sno in ntu_snos:
+    station_data = df[df["sno"] == sno]
+    table = pd.pivot_table(station_data, values="sbi", index="time", columns="date")
+    # dfp = df.pivot(index="time", columns="date", values="sbi").bfill()
+    ax = table.plot(figsize=(14, 4), color="blue", legend=False)
+    mean = table.mean(axis=1)
+    ax = mean.plot(ax=ax, color="red", lw=2, legend=False)
+    std = table.std(axis=1)
+    ax = std.plot(ax=ax, color="yellow", legend=False)
+    # pred
+    ax = 
+
+    plt.savefig(f"./lines/{sno}-{name_suffix}.png")
+    plt.close(ax.get_figure())
+
+exit()
 
 # does the same at public test set (2023/10/21 - 2023/10/24)
 public_test_range = pd.date_range(PUBLIC_START, PUBLIC_END, freq="20min")
 # list makes indexer 1D, or it is an 2D indexer
 ftr = list(
-    np.stack(
-        [public_test_range.time, np.vectorize(is_holiday)(public_test_range.date)]
-    ).T
+    np.stack([public_test_range.time, np.vectorize(trans)(public_test_range.weekday)]).T
 )
 # print(ftr)
 # ftr = list(ftr)
 # print(ftr)
-
 y_public_test = result_df.loc[ftr].values
 public_test_df = pd.DataFrame(y_public_test, columns=ntu_snos, index=public_test_range)
 
@@ -133,13 +176,14 @@ public_test_df = pd.DataFrame(y_public_test, columns=ntu_snos, index=public_test
 private_test_range = pd.date_range(PRIVATE_START, PRIVARE_END, freq="20min")
 ftr = list(
     np.stack(
-        [private_test_range.time, np.vectorize(is_holiday)(private_test_range.date)]
+        [private_test_range.time, np.vectorize(trans)(private_test_range.weekday)]
     ).T
 )
 y_private_test = result_df.loc[ftr].values
 private_test_df = pd.DataFrame(
     y_private_test, columns=ntu_snos, index=private_test_range
 )
+
 
 # convert the prediction to the required format
 tmp = pd.concat(
@@ -168,6 +212,6 @@ out_df = pd.DataFrame(
     }
 )
 out_df.to_csv(
-    f"../submission/pub_{datetime.now().strftime('%m-%d-%H-%M')}.csv", index=False
+    f"../submission/pub_pri_{datetime.now().strftime('%m-%d-%H-%M')}.csv", index=False
 )
 print("csv created")
