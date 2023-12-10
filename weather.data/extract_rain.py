@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import datetime as dt
 
 key_order = [
     "datetime",
@@ -91,4 +92,7 @@ with open("./rain/A0A010.json", "r") as f:
         # print("\n")
         # print(entry)
     df = pd.DataFrame(ar)  # TODO do after concat
-    df.to_pickle("./rain_A0A010.pkl")
+
+current_datetime = dt.datetime.now()
+datetime_string = current_datetime.strftime("%m-%d-%H-%M")
+df.to_pickle(f"./rain_A0A010_1107-{datetime_string}.pkl")
