@@ -10,10 +10,10 @@ from utils import *
 from median_optimization import optimal_median
 
 TRAIN_START = "2023-10-02 00:00"
-TRAIN_END = "2023-11-24 23:59"
+TRAIN_END = "2023-12-10 23:59"
 
-TEST_START = "2023-11-25 00:00"
-TEST_END = "2023-11-26 23:59"
+TEST_START = "2023-10-28 00:00"
+TEST_END = "2023-10-31 23:59"
 
 
 PUBLIC_START = "2023-10-21 00:00"

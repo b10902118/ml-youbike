@@ -21,7 +21,7 @@ def first_greater_prefix_sum_idx(arr, target):
 
 
 # error when nan
-def optimal_median(y_true: np.ndarray, tot: int) -> (np.float64, np.float64):
+def optimal_median(y_true: np.ndarray, tot: int) -> tuple[np.float64, np.float64]:
     # assert len(y_true.shape) == 1, "optimal_median: shape error"
     # print(f"y_true: {y_true}")
 
