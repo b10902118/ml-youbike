@@ -1,0 +1,12 @@
+pandas
+scikit-learn
+numpy
+matplotlib
+xgboost
+tqdm
+joblib
+xgboost
+prophet
+neuralprophet == 0.6.2
+requests
+
