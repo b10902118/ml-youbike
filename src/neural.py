@@ -167,6 +167,7 @@ print(test_df)
 # %% [markdown]
 # Function to train and predict for a single station
 
+
 # %%
 def train_and_predict(sno):
     station_train = (
@@ -190,10 +191,11 @@ def train_and_predict(sno):
 
     # test_df['y'] = sno_df[sno_df["ds"].isin(test_df["ds"])]["y"].values
     forecast = m.predict(sno_test_df)
-    fig = m.plot_components(forecast)
-    plt.savefig(f"./prophet_lines/{sno}_components.png")
-    plt.close(fig)
-    return forecast #sno, forecast, m
+    m.plot_components(forecast)
+    plt.savefig(f"./neural_prophet_lines/{sno}_components.png")
+    plt.close()
+    return forecast  # sno, forecast, m
+
 
 # %% [markdown]
 # sno, forecast, m = train_and_predict(ntu_snos[0])
@@ -205,18 +207,23 @@ def train_and_predict(sno):
 # Train and predict for each station in parallel
 
 # %%
-with concurrent.futures.ProcessPoolExecutor(max_workers=50) as executor:  # seems to be single thread
+with concurrent.futures.ProcessPoolExecutor(
+    max_workers=30
+) as executor:  # seems to be single thread
     # Submit jobs for each station
-    future_to_sno = {executor.submit(train_and_predict, sno): sno for sno in ntu_snos}
+    future_to_sno = {
+        executor.submit(train_and_predict, sno): sno
+        for sno in ntu_snos
+    }
 
     # Retrieve results as they become available
     for future in concurrent.futures.as_completed(future_to_sno):
         sno = future_to_sno[future]
         try:
-            #result_sno, forecast_sno, model_sno = future.result()
+            # result_sno, forecast_sno, model_sno = future.result()
             forecast_sno = future.result()
             pred_dfs[sno] = forecast_sno
-            #models[result_sno] = model_sno
+            # models[result_sno] = model_sno
         except Exception as e:
             print(f"Error processing station {sno}: {e}")
             exit(1)
@@ -232,7 +239,7 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=50) as executor:  # seem
 # fig = m.plot_components(pred_df)<br>
 # plt.savefig(f"./prophet_lines/{ntu_snos[0]}_components.png")<br>
 # plt.close(fig)<br>
-# 
+#
 
 # %%
 test_range = pd.date_range(TEST_START, TEST_END, freq="20min")
@@ -252,13 +259,14 @@ y_pred = np.empty([test_len, 0])
 # %%
 errors = {}
 for sno, tot in zip(ntu_snos, ntu_tots):
+#for sno, tot in zip([ntu_snos[0], ntu_snos[1]], [ntu_tots[0], ntu_tots[1]]):
     pred_df = pred_dfs[sno]
-    #m = models[sno]
-    #fig = m.plot_components(pred_df)
-    #plt.savefig(f"./prophet_lines/{sno}_components.png")
-    #plt.close(fig)
-    pred_df["yhat"].clip(lower=0, upper=tot, inplace=True)
-    pred = pred_df["yhat"].to_numpy()
+    # m = models[sno]
+    # fig = m.plot_components(pred_df)
+    # plt.savefig(f"./prophet_lines/{sno}_components.png")
+    # plt.close(fig)
+    pred_df["yhat1"].clip(lower=0, upper=tot, inplace=True)
+    pred = pred_df["yhat1"].to_numpy()
     y_pred = np.column_stack((y_pred, pred))
 
     # TODO E_in
@@ -266,7 +274,7 @@ for sno, tot in zip(ntu_snos, ntu_tots):
     # print(ans.shape, pred_df.shape)
     err = error(ans.to_numpy(), pred, np.full(test_len, tot))
     errors[sno] = err
-    ax = pred_df.plot(x="ds", y="yhat", figsize=(20, 6), title=f"score: {err}")
+    ax = pred_df.plot(x="ds", y="yhat1", figsize=(20, 6), title=f"score: {err}")
     ans.plot(ax=ax, x="ds", y="y")
     plt.savefig(f"./neural_prophet_lines/{sno}.png")
     plt.close()
@@ -308,7 +316,7 @@ evaluation(y_test, y_pred, ntu_tots, test_range)
 # rain+sunny \<br>
 # MAE:  0.12230290642321821 \<br>
 # Score:  0.2167087889314868<br>
-# 
+#
 
 # %% [markdown]
 # %% [markdown]<br>
@@ -468,10 +476,8 @@ evaluation(y_test, y_pred, ntu_tots, test_range)
 #     upd.set_index([[patch_time], [0]], inplace=True)<br><br>
 #     y_private_df.loc[(patch_time, 0)] = upd<br><br>
 # print(y_private_df)<br><br>
-# 
+#
 
 # %% [markdown]
 # %% [markdown]<br>
 # convert the prediction to the required format
-
-
