@@ -162,7 +162,7 @@ test_df = pd.DataFrame({"ds": pd.date_range(TEST_START, TEST_END, freq="20min")}
 # test_df['y'] = None
 test_df["rain"] = test_df["ds"].dt.date.isin(rainy_dates).astype(np.float64)
 test_df["holiday"] = test_df["ds"].dt.date.isin(holidays).astype(np.float64)
-print(test_df)
+# print(test_df)
 
 # %% [markdown]
 # Function to train and predict for a single station
@@ -177,6 +177,12 @@ def train_and_predict(sno):
         .dropna()
         .reset_index()
     )
+    if station_train["y"].nunique() <= 1:
+        ret = test_df[["ds"]].copy()
+        ret["yhat1"] = station_train["y"].unique()[0]
+        # print(ret)
+        return ret
+
     m = NeuralProphet()
     m = m.add_events("holiday")  # , lower_window=0, upper_window=1)
     m.add_future_regressor("rain")
@@ -211,10 +217,7 @@ with concurrent.futures.ProcessPoolExecutor(
     max_workers=30
 ) as executor:  # seems to be single thread
     # Submit jobs for each station
-    future_to_sno = {
-        executor.submit(train_and_predict, sno): sno
-        for sno in ntu_snos
-    }
+    future_to_sno = {executor.submit(train_and_predict, sno): sno for sno in ntu_snos}
 
     # Retrieve results as they become available
     for future in concurrent.futures.as_completed(future_to_sno):
@@ -225,8 +228,10 @@ with concurrent.futures.ProcessPoolExecutor(
             pred_dfs[sno] = forecast_sno
             # models[result_sno] = model_sno
         except Exception as e:
-            print(f"Error processing station {sno}: {e}")
+            with open("./error.txt", "w") as f:
+                f.write(f"Error processing station {sno}: {e}\n")
             exit(1)
+print("done")
 
 # %% [markdown]
 # %% [markdown]<br>
@@ -259,7 +264,7 @@ y_pred = np.empty([test_len, 0])
 # %%
 errors = {}
 for sno, tot in zip(ntu_snos, ntu_tots):
-#for sno, tot in zip([ntu_snos[0], ntu_snos[1]], [ntu_tots[0], ntu_tots[1]]):
+    # for sno, tot in zip([ntu_snos[0], ntu_snos[1]], [ntu_tots[0], ntu_tots[1]]):
     pred_df = pred_dfs[sno]
     # m = models[sno]
     # fig = m.plot_components(pred_df)
