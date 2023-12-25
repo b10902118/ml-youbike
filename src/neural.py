@@ -197,9 +197,8 @@ def train_and_predict(sno):
 
     # test_df['y'] = sno_df[sno_df["ds"].isin(test_df["ds"])]["y"].values
     forecast = m.predict(sno_test_df)
-    m.plot_components(forecast)
-    plt.savefig(f"./neural_prophet_lines/{sno}_components.png")
-    plt.close()
+    fig = m.plot_components(forecast)
+    fig.write_image(f"./neural_prophet_lines/{sno}_components.png")
     return forecast  # sno, forecast, m
 
 
