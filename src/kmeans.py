@@ -62,11 +62,11 @@ def train_and_predict(TRAIN_START, TRAIN_END, TEST_START, TEST_END):
     df = load_all_data()
     df = df[df["act"] == "1"]  # filter out inactive stations
     station_sno_df = get_station_sno_df(df, ntu_snos)
-    print(
-        "Amount of data points by stations",
-        df.groupby(by="sno")["time"].size().describe(),
-    )
-    print("Number of stations", df["sno"].nunique())
+    # print(
+    #    "Amount of data points by stations",
+    #    df.groupby(by="sno")["time"].size().describe(),
+    # )
+    # print("Number of stations", df["sno"].nunique())
     assert df.groupby(by="sno")["time"].is_monotonic_increasing.all(), "WTF?!"
 
     bad_station = [
@@ -365,27 +365,27 @@ def train_and_predict(TRAIN_START, TRAIN_END, TEST_START, TEST_END):
     long_train, aggregated_train, to_group_df = prepare_data(train)
 
     if long_train.isnull().any().any():
-        print("long_train has NaN")
+        # print("long_train has NaN")
         long_train.dropna(inplace=True)
-    if aggregated_train.isnull().any():
-        print("aggregated_train has NaN")
+    if aggregated_train.isnull().any().any():
+        # print("aggregated_train has NaN")
         aggregated_train.dropna(inplace=True)
-    if to_group_df.isnull().any():
-        print("to_group_df has NaN")
+    if to_group_df.isnull().any().any():
+        # print("to_group_df has NaN")
         to_group_df.dropna(inplace=True)
 
     n_clusters = 2000
-    print("=" * 40)
-    print(f"{n_clusters = }")
+    # print("=" * 40)
+    # print(f"{n_clusters = }")
     km = KMeans(n_clusters=n_clusters, random_state=0, n_init="auto")
     to_group_df["group"] = km.fit_predict(to_group_df[property_names])
     t_df = get_group_assignment_df(km, train.index, aggregated_train)
     t_df, group_df = do_train(km, t_df, long_train, n_clusters)
-    print(t_df.groupby("group").size().describe())
-    print(group_df["err"].describe())
+    # print(t_df.groupby("group").size().describe())
+    # print(group_df["err"].describe())
     test_pred = get_prediction(km, test_true.index, group_df, aggregated_train)
     test_pred.set_index("time", inplace=True)
-    print(test_pred)
+    # print(test_pred)
 
     # pivot test_pred by sno to columns
     test_pred_p = test_pred.pivot(columns="sno", values="sbi")
@@ -397,6 +397,6 @@ def train_and_predict(TRAIN_START, TRAIN_END, TEST_START, TEST_END):
     # sort test_pred_p by sno , don't use ntu_snos because some stations are never active
     test_pred_p = test_pred_p[sorted(test_pred_p.columns)]
 
-    print(test_pred_p)
+    # print(test_pred_p)
 
     return test_pred_p

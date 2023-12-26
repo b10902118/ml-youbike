@@ -145,3 +145,49 @@ def evaluation(y_true, y_pred, tots, time_range, prefix=""):
     plt.savefig(
         f"{prefix if prefix != '' else 'error'}-{datetime.now().strftime('%m-%d-%H-%M')}.png"
     )
+
+
+def evaluation_all(y_true, y_pred_list, tots, time_range, df_names):
+    # Initialize an array to store scores for each dataframe
+    all_scores = []
+
+    for i, y_pred in enumerate(y_pred_list):
+        mae = mean_absolute_error(y_true / tots, y_pred / tots)
+        print(f"MAE for {df_names[i]}: {mae}")
+
+        # error function defined in the problem description
+        # tots is a 1D array, but still fine for matrix division
+        score = error(y_true, y_pred, tots)
+        print(f"Score for {df_names[i]}: {score}")
+
+        # yt is a row of many station's sbi
+        scores = np.array([error(yt, yp, tots) for yt, yp in zip(y_true, y_pred)])
+        all_scores.append(scores)
+
+    # Plot scores for each dataframe on the same figure
+    for i, scores in enumerate(all_scores):
+        label = f"{df_names[i]}"
+        plt.plot(time_range, scores, label=label)
+
+    # Set up figure and save
+    plt.xlabel("Time")
+    plt.ylabel("Error")
+    plt.title("Scores")
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.tight_layout()
+
+    # Save the figure with a timestamp
+    # Extract start and end dates from time_range
+    start_date = time_range[0].strftime("%m-%d")
+    end_date = time_range[-1].strftime("%m-%d")
+
+    # Save the figure with start and end dates
+    plt.savefig(f"./final/error-{start_date}-{end_date}.png")
+
+    # Show the plot
+    plt.show()
+
+
+# Example usage:
+# evaluation(y_true, [y_pred_1, y_pred_2], tots, time_range, df_names=["Model A", "Model B"])

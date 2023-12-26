@@ -32,7 +32,7 @@ def load_demographics(path: Path):
 
 
 # try date & time
-def load_data_file(path: Path, base_date=BASE_DATE):
+def load_data_file(path: Path, base_date):
     with open(path) as f:
         data = json.load(f)
         ar = []
@@ -45,7 +45,14 @@ def load_data_file(path: Path, base_date=BASE_DATE):
                 v.pop("bemp")
             ar.append(v)
     # fill NaN with next value and then previous value (for last empty)
-    return pd.DataFrame(ar).bfill(limit=5).ffill(limit=5)  # TODO do after concat
+    month = pd.to_datetime(base_date).month
+    if month == 12:  # for test
+        ret = pd.DataFrame(ar).ffill().bfill()
+        if ret.isnull().any().any():
+            print(ret)
+        return ret
+
+    return pd.DataFrame(ar).ffill(limit=5).bfill(limit=5)  # TODO do after concat
 
 
 # 1. conform column "time" with timestamp

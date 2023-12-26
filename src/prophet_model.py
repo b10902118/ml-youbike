@@ -142,5 +142,9 @@ def train_and_predict_prophet(TRAIN_START, TRAIN_END, TEST_START, TEST_END):
         # plt.savefig(f"./prophet_lines/{sno}.png")
         # plt.close()
     y_pred.set_index("ds")
-    print(y_pred)
+    # print(y_pred)
+    y_pred.rename(columns={"ds": "time"}, inplace=True)
+    y_pred.set_index("time", inplace=True)
+    y_pred.sort_index(inplace=True)
+    y_pred.sort_index(axis=1, inplace=True)
     return y_pred
